@@ -12,6 +12,7 @@ This project is a humble example/experiment on how to integrate different markup
 Other external libraries and resources used in this project:
 - css by [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
 - icons by [icons8.com](https://icons8.com/icon/new-icons/material-outlined)
+- [Wikipedia logo](https://commons.wikimedia.org/wiki/File:Wikipedia-logo.png)
 
 # Further ideas
 
