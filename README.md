@@ -3,7 +3,8 @@
 # About
 You are welcome to:
 - play with the [demo](https://markdownit.salalex.repl.co),
-- examine the code [in this REPL](https://repl.it/@salalex/markdownit).
+- examine the code [in this REPL](https://repl.it/@salalex/markdownit),
+- checkout my [repository on GitHub](https://github.com/alex-salnikov/markdownit).
 
 This project is a humble example/experiment on how to integrate different markup syntax parsing in frontend, including following:
 - [markdown](https://en.wikipedia.org/wiki/Markdown) via [markdown-it.js](https://github.com/markdown-it/markdown-it),
@@ -13,6 +14,7 @@ Other external libraries and resources used in this project:
 - css by [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
 - icons by [icons8.com](https://icons8.com/icon/new-icons/material-outlined)
 - [Wikipedia logo](https://commons.wikimedia.org/wiki/File:Wikipedia-logo.png)
+- corner ribbon by [css-fork-on-github-ribbon](https://codepo8.github.io/css-fork-on-github-ribbon)
 
 # Further ideas
 
