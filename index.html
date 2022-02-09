@@ -67,7 +67,7 @@ var base_url = (function(){
 	},
 
 	normalizeLink = function(url){
-		return (url.substr(0,4) == 'http:' || url.substr(0,5) == 'https:')
+		return (url.substr(0,5) == 'http:' || url.substr(0,6) == 'https:')
 			? url											// external URL
 			: (url.slice(-3) == '.md' || url.slice(-10) == '.mediawiki')
 				? '#' + local_dir + url.replace('./', '')	// anchor
