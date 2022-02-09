@@ -65,31 +65,38 @@ var base_url = (function(){
 			? path.join('/') + '/'
 			: ''
 	},
-	
+
 	normalizeLink = function(url){
-		return (url.slice(-3) == '.md' || url.slice(-10) == '.mediawiki')
-			? '#' + url.replace('./', local_dir)		// anchor
-			: (url.substr(0,4) == 'http:'
-				|| url.substr(0,5) == 'https:')
-				? URL									// external URL
-				: url.replace('./', local_dir)			// local URL
-	};
+		return (url.substr(0,4) == 'http:' || url.substr(0,5) == 'https:')
+			? url											// external URL
+			: (url.slice(-3) == '.md' || url.slice(-10) == '.mediawiki')
+				? '#' + local_dir + url.replace('./', '')	// anchor
+				: local_dir + url.replace('./', '') 		// local URL
+	},
 
 
 	render_text = function(renderer, marked_text, filename){
 		if(filename){
+			// update local_dir
 			local_dir = get_base(filename);
 			
-			if(filename.slice(-3) == '.md'){
-				// https://markdown-it.github.io/markdown-it/
-				var md = window.markdownit();
-				md.normalizeLink = function(url){
-					return normalizeLink(url);
-				};
-				renderer(md.render(marked_text), decodeURIComponent(filename));
-			}
-			else if(filename.slice(-10) == '.mediawiki'){
-				renderer(marked_text.wiki2html(), decodeURIComponent(filename));
+			switch(filename.split('.').pop()){
+				case 'md':
+					// https://markdown-it.github.io/markdown-it/
+					var md = window.markdownit();
+					md.normalizeLink = function(url){
+						return normalizeLink(url);
+					};
+					renderer(md.render(marked_text), decodeURIComponent(filename));
+					break;
+
+				case 'mediawiki':
+					renderer(marked_text.wiki2html(), decodeURIComponent(filename));
+					break;
+					
+				default:
+					// TODO error
+					break;
 			}
 		}
 	},
