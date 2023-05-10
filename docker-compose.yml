@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  nginx:
+#    container_name: markdownit
+    image: nginx
+    restart: unless-stopped
+    ports:
+      - 8080:80
+    volumes:
+      - ./:/usr/share/nginx/html
+        
+# docker-compose up -d
+# docker-compose down
