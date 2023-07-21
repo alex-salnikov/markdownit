@@ -9,7 +9,7 @@
 		href="sidebar.css" />
 	<!-- https://jquery.com -->
 	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" 
+		src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
 		integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg=="
 		crossorigin="anonymous"></script>
 	<!-- https://getbootstrap.com/docs/4.5/
@@ -24,10 +24,10 @@
 		href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css"
 		integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg=="
 		crossorigin="anonymous" />
-	<link rel="stylesheet" 
+	<link rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"
-		integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" 
-		crossorigin="anonymous" />	
+		integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog=="
+		crossorigin="anonymous" />
 	<!-- https://github.com/sindresorhus/github-markdown-css -->
 	<link rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"
@@ -51,14 +51,17 @@
 <body>
 
 <script>
-var base_url = (function(){
+var content_dir = './',
+	local_dir = '',
+	fileMain = 'README.md',
+	fileSidebar = 'SIDEBAR.md',
+
+	base_url = (function(){
 		var arr_path = document.location.pathname.split('/');
 		arr_path.pop();
 		return arr_path.join('/') + '/'
 	})(),
-	
-	content_dir = './',
-	local_dir = '',
+
 	get_base = function(filename){
 		var path = filename.split('/');
 		path.pop();
@@ -80,7 +83,7 @@ var base_url = (function(){
 		if(filename){
 			// update local_dir
 			local_dir = get_base(filename);
-			
+
 			switch(filename.split('.').pop()){
 				case 'md':
 					// https://markdown-it.github.io/markdown-it/
@@ -94,7 +97,7 @@ var base_url = (function(){
 				case 'mediawiki':
 					renderer(marked_text.wiki2html(), decodeURIComponent(filename));
 					break;
-					
+
 				default:
 					// TODO error
 					break;
@@ -112,23 +115,36 @@ var base_url = (function(){
 		};
 		oReq.send();
 	},
-	
+
 	render_main = function(text, title){
 		document.getElementById('main_text').innerHTML = text;
 		document.title = 'Wiki: ' + title;
 	},
-	
+
 	render_sidebar = function(text){
 		document.getElementById('sidebar_text').innerHTML = text;
+	},
+
+	wikiInit = function() {
+		load_and_render(render_sidebar, content_dir + fileSidebar);
+		load_and_render(render_main, document.location.hash.substring(1) || content_dir + fileMain); // skip hash-char
+	},
+
+	wikiUpdate = function() {
+		load_and_render(render_main, document.location.hash.substring(1) || content_dir + fileMain); // skip hash-char
 	};
 
+
+// ----
+
 window.onload = function(){
-	load_and_render(render_sidebar, content_dir + 'SIDEBAR.md');
-	load_and_render(render_main, document.location.hash.substring(1) || content_dir + 'README.md'); // skip hash-char
+	// wiki
+	wikiInit()
 };
 
 window.onhashchange = function(){
-	load_and_render(render_main, document.location.hash.substring(1) || content_dir + 'README.md'); // skip hash-char
+	// wiki
+	wikiUpdate();
 };
 
 // ----
@@ -138,7 +154,7 @@ window.onhashchange = function(){
 Split-view based on Bootstrap's dashboard example
 https://getbootstrap.com/docs/4.5/examples/dashboard/#
 -->
-<nav class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow" 
+<nav class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow"
 	style="background: rgb(48, 66, 106);">
 	<a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Wiki</a>
 	<button class="navbar-toggler position-absolute d-md-none collapsed"
@@ -146,10 +162,10 @@ https://getbootstrap.com/docs/4.5/examples/dashboard/#
 		aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
 	</button>
-	<input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+	<input id="search_text" class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
 	<ul class="navbar-nav px-3">
 		<li class="nav-item text-nowrap">
-			<a class="nav-link"
+			<a id="search_button" class="nav-link"
 				href="#"><i class="fa fa-search" aria-hidden="true"></i></a>
 		</li>
 	</ul>
