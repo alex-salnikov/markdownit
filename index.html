@@ -57,6 +57,7 @@ var base_url = (function(){
 		return arr_path.join('/') + '/'
 	})(),
 	
+	content_dir = './',
 	local_dir = '',
 	get_base = function(filename){
 		var path = filename.split('/');
@@ -117,17 +118,17 @@ var base_url = (function(){
 		document.title = 'Wiki: ' + title;
 	},
 	
-	render_sidebar = function(text, title){
+	render_sidebar = function(text){
 		document.getElementById('sidebar_text').innerHTML = text;
 	};
 
 window.onload = function(){
-	load_and_render(render_sidebar, 'SIDEBAR.md');
-	load_and_render(render_main, document.location.hash.substring(1) || 'README.md'); // skip hash-char
+	load_and_render(render_sidebar, content_dir + 'SIDEBAR.md');
+	load_and_render(render_main, document.location.hash.substring(1) || content_dir + 'README.md'); // skip hash-char
 };
 
 window.onhashchange = function(){
-	load_and_render(render_main, document.location.hash.substring(1) || 'README.md'); // skip hash-char
+	load_and_render(render_main, document.location.hash.substring(1) || content_dir + 'README.md'); // skip hash-char
 };
 
 // ----
