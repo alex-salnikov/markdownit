@@ -47,6 +47,26 @@
 	<script
 		src="https://remysharp.com/downloads/wiki2html.js"
 		></script>
+	<!-- https://github.com/olivernn/lunr.js -->
+	<!--
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.9/lunr.min.js"
+		integrity="sha512-4xUl/d6D6THrAnXAwGajXkoWaeMNwEKK4iNfq5DotEbLPAfk6FSxSP3ydNxqDgCw1c/0Z1Jg6L8h2j+++9BZmg=="
+		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	-->
+
+	<!-- https://github.com/julmot/mark.js -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"
+		integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww=="
+		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<style>
+		mark{
+			background: yellow;
+			color: black;
+		}
+		mark.current {
+			background: orange;
+		}
+	</style>
 </head>
 <body>
 
@@ -135,11 +155,73 @@ var content_dir = './',
 	};
 
 
+
+// https://markjs.io
+// mark.js
+var markInstance,
+	markMatch,
+	markContent,
+	markResults,
+
+	highlightText = function(text){
+		markContent = document.querySelector('#main_text');
+		markInstance = new Mark(markContent);
+
+		markMatch = markInstance.mark(text, {
+			acrossElements: true,
+			done: function() {
+				/*
+				markResults = markContent.find("mark");
+				currentIndex = 0;
+				jumpTo();
+				*/
+			}
+		});
+	},
+
+	unhighlightText = function(){
+		if(!!markMatch) {
+			//markMatch.unmark();
+			markInstance.unmark();
+			markMatch = undefined
+		}
+	},
+
+	searchStart = function(text){
+		highlightText($searchText.val());
+	},
+
+	searchClear = function(){
+		unhighlightText();
+	},
+
+	searchKeypress = function(event){
+		var text = $searchText.val();
+		if(event.keyCode === 13){
+			text.length ? searchStart() : searchClear()
+		}
+		else if(!text.length) {
+			searchClear()
+		}
+	},
+
+	searchInit = function(){
+		$searchButton = $("#search_button");
+		$searchButton.click(searchStart);
+
+		$searchText = $("#search_text");
+		$searchText.keyup(searchKeypress)
+	};
+
+
 // ----
 
 window.onload = function(){
 	// wiki
 	wikiInit()
+
+	// search
+	searchInit();
 };
 
 window.onhashchange = function(){
