@@ -81,7 +81,7 @@ const md = window.markdownit();
 
 // Wiki
 class Wiki {
-	content_dir = './docu/';
+	content_dir = './';
 	local_dir = '';
 	fileMain = 'README.md';
 	fileSidebar = 'SIDEBAR.md';
@@ -186,72 +186,84 @@ class Wiki {
 
 // https://markjs.io
 // mark.js
-var markInstance,
-	markMatch,
-	markContent,
-	markResults,
+class TextSearch {
+	markInstance;
+	markMatch;
+	markContent;
+	markResults;
+	ctrlSearchButton;
+	ctrlSearchText;
 
-	highlightText = function(text){
-		markContent = document.querySelector('#main_text');
-		markInstance = new Mark(markContent);
+	constructor(){
+		// empty
+	}
 
-		markMatch = markInstance.mark(text, {
+	highlightText(text){
+		this.markContent = document.querySelector('#main_text');
+		this.markInstance = new Mark(this.markContent);
+
+		this.markMatch = this.markInstance.mark(text, {
 			acrossElements: true,
-			done: function() {
+			done: function(){
 				/*
-				markResults = markContent.find("mark");
+				this.markResults = markContent.find("mark");
 				currentIndex = 0;
 				jumpTo();
 				*/
 			}
 		});
-	},
+	}
 
-	unhighlightText = function(){
-		if(!!markMatch) {
-			//markMatch.unmark();
-			markInstance.unmark();
-			markMatch = undefined
+	unhighlightText(){
+		if(!!this.markMatch){
+			this.markInstance.unmark();
+			this.markMatch = undefined
 		}
-	},
+	}
 
-	searchStart = function(text){
-		highlightText($searchText.val());
-	},
+	searchStart(){
+		this.highlightText(this.ctrlSearchText.val());
+	}
 
-	searchClear = function(){
-		unhighlightText();
-	},
+	searchClear(){
+		this.unhighlightText();
+	}
 
-	searchKeypress = function(event){
-		var text = $searchText.val();
+	searchKeypress(event){
+		var text = this.ctrlSearchText.val();
 		if(event.keyCode === 13){
-			text.length ? searchStart() : searchClear()
+			this.searchClear();
+			if(text.length){
+				this.searchStart()
+			}
 		}
-		else if(!text.length) {
-			searchClear()
+		else if(!text.length){
+			this.searchClear()
 		}
-	},
+	}
 
-	searchInit = function(){
-		$searchButton = $("#search_button");
-		$searchButton.click(searchStart);
+	init(){
+		const that = this;
 
-		$searchText = $("#search_text");
-		$searchText.keyup(searchKeypress)
-	};
+		this.ctrlSearchButton = $("#search_button");
+		this.ctrlSearchButton.click((event) => { that.searchStart(event) });
 
+		this.ctrlSearchText = $("#search_text");
+		this.ctrlSearchText.keyup((event) => { that.searchKeypress(event) })
+	}
+}
 
 // ----
 
 const wiki = new Wiki();
+const textSearch = new TextSearch();
 
 window.onload = function(){
 	// wiki
 	wiki.init();
 
 	// search
-	searchInit();
+	textSearch.init();
 };
 
 window.onhashchange = function(){
