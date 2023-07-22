@@ -43,7 +43,9 @@
 		integrity="sha512-NAy36MOh5jQWVH+nhBtvf1oHXp61td4tTZhe/SxbhNAV4RjeKlvUJ/WlzOwDxLQfUIsDPWMKFTsrRl6W4RnQuw=="
 		crossorigin="anonymous"></script>
 	<!-- https://github.com/sandcastle/wikid
-		https://remysharp.com/demo/wiki2html.html -->
+		https://remysharp.com/demo/wiki2html.html
+		TODO integrity check hash ?
+	-->
 	<script
 		src="https://remysharp.com/downloads/wiki2html.js"
 		></script>
@@ -51,45 +53,60 @@
 <body>
 
 <script>
-var content_dir = './',
-	local_dir = '',
-	fileMain = 'README.md',
-	fileSidebar = 'SIDEBAR.md',
+// --------
 
-	base_url = (function(){
-		var arr_path = document.location.pathname.split('/');
-		arr_path.pop();
-		return arr_path.join('/') + '/'
-	})(),
+// Libraries
+const md = window.markdownit();
 
-	get_base = function(filename){
+
+// Wiki
+class Wiki {
+	content_dir = './docu/';
+	local_dir = '';
+	fileMain = 'README.md';
+	fileSidebar = 'SIDEBAR.md';
+	base_url = '';
+
+	constructor() {
+		// empty
+	}
+
+	getBasePath(filename){
 		var path = filename.split('/');
 		path.pop();
 		return path.length
 			? path.join('/') + '/'
 			: ''
-	},
+	}
 
-	normalizeLink = function(url){
+	getMainPath() {
+		// skip '#' character in location
+		return document.location.hash.substring(1) || this.content_dir + this.fileMain;
+	}
+
+	getSidebarPath() {
+		return this.content_dir + this.fileSidebar;
+	}
+
+	normalizeLink(url){
 		return (url.substr(0,5) == 'http:' || url.substr(0,6) == 'https:')
-			? url											// external URL
+			? url												// external URL
 			: (url.slice(-3) == '.md' || url.slice(-10) == '.mediawiki')
-				? '#' + local_dir + url.replace('./', '')	// anchor
-				: local_dir + url.replace('./', '') 		// local URL
-	},
+				? '#' + this.local_dir + url.replace('./', '')	// anchor
+				: this.local_dir + url.replace('./', '') 		// local URL
+	}
 
-
-	render_text = function(renderer, marked_text, filename){
+	renderText(renderer, marked_text, filename){
 		if(filename){
 			// update local_dir
-			local_dir = get_base(filename);
+			this.local_dir = this.getBasePath(filename);
 
 			switch(filename.split('.').pop()){
 				case 'md':
+					var that = this;
 					// https://markdown-it.github.io/markdown-it/
-					var md = window.markdownit();
 					md.normalizeLink = function(url){
-						return normalizeLink(url);
+						return that.normalizeLink(url);
 					};
 					renderer(md.render(marked_text), decodeURIComponent(filename));
 					break;
@@ -103,48 +120,61 @@ var content_dir = './',
 					break;
 			}
 		}
-	},
+	}
 
-	load_and_render = function(renderer, filename){
-		var url = base_url + filename;
+	loadAndRender(renderer, filename){
+		var that = this;
+		var url = this.base_url + filename;
 		var oReq = new XMLHttpRequest();
-		oReq.addEventListener('load', render_text);
+		oReq.addEventListener('load', that.renderText);
 		oReq.open('GET', url);
 		oReq.onload = function(e){
-			this.status != 200 || render_text(renderer, this.response, filename);
+			this.status != 200 || that.renderText(renderer, this.response, filename);
 		};
 		oReq.send();
-	},
+	}
 
-	render_main = function(text, title){
-		document.getElementById('main_text').innerHTML = text;
+	renderMain(text, title){
+		document.querySelector('#main_text').innerHTML = text;
 		document.title = 'Wiki: ' + title;
-	},
+	}
 
-	render_sidebar = function(text){
-		document.getElementById('sidebar_text').innerHTML = text;
-	},
+	renderSidebar(text, title){
+		document.querySelector('#sidebar_text').innerHTML = text;
+	}
 
-	wikiInit = function() {
-		load_and_render(render_sidebar, content_dir + fileSidebar);
-		load_and_render(render_main, document.location.hash.substring(1) || content_dir + fileMain); // skip hash-char
-	},
+	init() {
+		var that = this;
 
-	wikiUpdate = function() {
-		load_and_render(render_main, document.location.hash.substring(1) || content_dir + fileMain); // skip hash-char
-	};
+		this.base_url = (function(){
+			var arr_path = document.location.pathname.split('/');
+			arr_path.pop();
+			return arr_path.join('/') + '/'
+		})();
+
+		this.loadAndRender((text, title) => { that.renderSidebar(text, title) }, this.getSidebarPath());
+		this.loadAndRender((text, title) => { that.renderMain(text, title) }, this.getMainPath());
+	}
+
+	update() {
+		var that = this;
+		this.loadAndRender((text, title) => { that.renderMain(text, title) }, this.getMainPath());
+	}
+}
 
 
 // ----
 
+const wiki = new Wiki();
+
 window.onload = function(){
 	// wiki
-	wikiInit()
+	wiki.init();
 };
 
 window.onhashchange = function(){
 	// wiki
-	wikiUpdate();
+	wiki.update();
 };
 
 // ----
