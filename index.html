@@ -140,16 +140,48 @@ class WikiDoc {
 }
 
 
+// Catalog of Documents
+class Catalog {
+	urlBase = './';
+	dirContent;
+	docs = {};
+
+	constructor(params) {
+		this.dirContent = params.dirContent || '';
+	}
+
+	getDoc(filename, handler){
+		var that = this;
+		if(this.docs[filename]){
+			handler(this.docs[filename])
+		}
+		else {
+			const url = this.urlBase + filename;
+			const oReq = new XMLHttpRequest();
+			oReq.open('GET', url);
+			oReq.onload = function(e){
+				this.status != 200 || handler(that.addDoc(new WikiDoc({ url: url, content: this.response, title: decodeURIComponent(filename) }), filename));
+			};
+			oReq.send();
+		}
+	}
+
+	addDoc(doc, filename){
+		this.docs[filename] = doc;
+		return doc;
+	}
+}
+
+
 // Wiki
 class Wiki {
 	content_dir = '';
-	local_dir = '';
 	fileMain = 'README.md';
 	fileSidebar = 'SIDEBAR.md';
-	base_url = './';
+	catalog;
 
 	constructor() {
-		// empty
+		this.catalog = new Catalog({ dirContent: this.content_dir });
 	}
 
 	getMainPath() {
@@ -159,17 +191,6 @@ class Wiki {
 
 	getSidebarPath() {
 		return this.content_dir + this.fileSidebar;
-	}
-
-	loadAndRender(renderer, filename){
-		var that = this;
-		var url = this.base_url + filename;
-		var oReq = new XMLHttpRequest();
-		oReq.open('GET', url);
-		oReq.onload = function(e){
-			this.status != 200 || renderer(new WikiDoc({ url: url, content: this.response, title: decodeURIComponent(filename) }));
-		};
-		oReq.send();
 	}
 
 	renderMain(doc){
@@ -183,14 +204,13 @@ class Wiki {
 
 	init() {
 		var that = this;
-
-		this.loadAndRender((doc) => { that.renderSidebar(doc) }, this.getSidebarPath());
-		this.loadAndRender((doc) => { that.renderMain(doc) }, this.getMainPath());
+		this.catalog.getDoc(this.getSidebarPath(), (doc) => { that.renderSidebar(doc) });
+		this.catalog.getDoc(this.getMainPath(), (doc) => { that.renderMain(doc) });
 	}
 
 	update() {
 		var that = this;
-		this.loadAndRender((doc) => { that.renderMain(doc) }, this.getMainPath());
+		this.catalog.getDoc(this.getMainPath(), (doc) => { that.renderMain(doc) });
 	}
 }
 
