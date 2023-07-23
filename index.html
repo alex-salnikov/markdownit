@@ -86,7 +86,7 @@ class WikiDoc {
 		return this.title;
 	}
 
-	getBasePath(filename){
+	_getBasePath(filename){
 		var path = filename.split('/');
 		path.pop();
 		return path.length
@@ -102,29 +102,29 @@ class WikiDoc {
 				: this.dirLocal + url.replace('./', '') 		// local URL
 	}
 
-	renderContent(marked_text, filename){
+	_parseContent(){
 		var html = '';
-		if(filename){
+		if(this.url){
 			// update dirLocal
-			this.dirLocal = this.getBasePath(filename);
+			this.dirLocal = this._getBasePath(this.url);
 
-			switch('.' + filename.split('.').pop()){
+			switch('.' + this.url.split('.').pop()){
 				case this.constructor.DOC_TYPE.MARKDOWN:
 					var that = this;
 					// https://markdown-it.github.io/markdown-it/
 					md.normalizeLink = function(url){
 						return that.normalizeLink(url);
 					};
-					html = md.render(marked_text);
+					html = md.render(this.content);
 					break;
 
 				case this.constructor.DOC_TYPE.MEDIAWIKI:
-					html = marked_text.wiki2html();
+					html = this.content.wiki2html();
 					break;
 
 				default:
 					// TODO error
-					html = `<pre>${marked_text}</pre>`
+					html = `<pre>${this.content}</pre>`
 					break;
 			}
 		}
@@ -133,7 +133,7 @@ class WikiDoc {
 
 	getHtml() {
 		if(this.html.length == 0 && this.content.length > 0){
-			this.html = this.renderContent(this.content, this.url);
+			this.html = this._parseContent();
 		}
 		return this.html;
 	}
@@ -160,7 +160,11 @@ class Catalog {
 			const oReq = new XMLHttpRequest();
 			oReq.open('GET', url);
 			oReq.onload = function(e){
-				this.status != 200 || handler(that.addDoc(new WikiDoc({ url: url, content: this.response, title: decodeURIComponent(filename) }), filename));
+				this.status != 200 || handler(that.addDoc(new WikiDoc({
+					url: url,
+					content: this.response,
+					title: decodeURIComponent(filename)
+				}), filename));
 			};
 			oReq.send();
 		}
