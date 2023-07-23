@@ -55,20 +55,35 @@
 <script>
 // --------
 
-// Libraries
+// Libraries aliases
 const md = window.markdownit();
 
 
-// Wiki
-class Wiki {
-	content_dir = './';
-	local_dir = '';
-	fileMain = 'README.md';
-	fileSidebar = 'SIDEBAR.md';
-	base_url = '';
+// Document
+class WikiDoc {
+	static DOC_TYPE = {
+		TEXT: '.text',
+		HTML: '.html',
+		MARKDOWN: '.md',
+		MEDIAWIKI: '.mediawiki'
+	};
 
-	constructor() {
-		// empty
+	type = '';
+	title = '';
+	url = '';
+	content = '';
+	html = '';
+	dirLocal = '';
+
+	constructor(params) {
+		this.url = params.url || '';
+		this.content = params.content || '';
+		this.title = params.title || '';
+		this.type = params.type || this.constructor.DOC_TYPE.TEXT;
+	}
+
+	getTitle() {
+		return this.title;
 	}
 
 	getBasePath(filename){
@@ -77,6 +92,64 @@ class Wiki {
 		return path.length
 			? path.join('/') + '/'
 			: ''
+	}
+
+	normalizeLink(url){
+		return (url.substr(0,5) == 'http:' || url.substr(0,6) == 'https:')
+			? url												// external URL
+			: (url.slice(-3) == '.md' || url.slice(-10) == '.mediawiki')
+				? '#' + this.dirLocal + url.replace('./', '')	// anchor
+				: this.dirLocal + url.replace('./', '') 		// local URL
+	}
+
+	renderContent(marked_text, filename){
+		var html = '';
+		if(filename){
+			// update dirLocal
+			this.dirLocal = this.getBasePath(filename);
+
+			switch('.' + filename.split('.').pop()){
+				case this.constructor.DOC_TYPE.MARKDOWN:
+					var that = this;
+					// https://markdown-it.github.io/markdown-it/
+					md.normalizeLink = function(url){
+						return that.normalizeLink(url);
+					};
+					html = md.render(marked_text);
+					break;
+
+				case this.constructor.DOC_TYPE.MEDIAWIKI:
+					html = marked_text.wiki2html();
+					break;
+
+				default:
+					// TODO error
+					html = `<pre>${marked_text}</pre>`
+					break;
+			}
+		}
+		return html;
+	}
+
+	getHtml() {
+		if(this.html.length == 0 && this.content.length > 0){
+			this.html = this.renderContent(this.content, this.url);
+		}
+		return this.html;
+	}
+}
+
+
+// Wiki
+class Wiki {
+	content_dir = '';
+	local_dir = '';
+	fileMain = 'README.md';
+	fileSidebar = 'SIDEBAR.md';
+	base_url = './';
+
+	constructor() {
+		// empty
 	}
 
 	getMainPath() {
@@ -88,77 +161,36 @@ class Wiki {
 		return this.content_dir + this.fileSidebar;
 	}
 
-	normalizeLink(url){
-		return (url.substr(0,5) == 'http:' || url.substr(0,6) == 'https:')
-			? url												// external URL
-			: (url.slice(-3) == '.md' || url.slice(-10) == '.mediawiki')
-				? '#' + this.local_dir + url.replace('./', '')	// anchor
-				: this.local_dir + url.replace('./', '') 		// local URL
-	}
-
-	renderText(renderer, marked_text, filename){
-		if(filename){
-			// update local_dir
-			this.local_dir = this.getBasePath(filename);
-
-			switch(filename.split('.').pop()){
-				case 'md':
-					var that = this;
-					// https://markdown-it.github.io/markdown-it/
-					md.normalizeLink = function(url){
-						return that.normalizeLink(url);
-					};
-					renderer(md.render(marked_text), decodeURIComponent(filename));
-					break;
-
-				case 'mediawiki':
-					renderer(marked_text.wiki2html(), decodeURIComponent(filename));
-					break;
-
-				default:
-					// TODO error
-					break;
-			}
-		}
-	}
-
 	loadAndRender(renderer, filename){
 		var that = this;
 		var url = this.base_url + filename;
 		var oReq = new XMLHttpRequest();
-		oReq.addEventListener('load', that.renderText);
 		oReq.open('GET', url);
 		oReq.onload = function(e){
-			this.status != 200 || that.renderText(renderer, this.response, filename);
+			this.status != 200 || renderer(new WikiDoc({ url: url, content: this.response, title: decodeURIComponent(filename) }));
 		};
 		oReq.send();
 	}
 
-	renderMain(text, title){
-		document.querySelector('#main_text').innerHTML = text;
-		document.title = 'Wiki: ' + title;
+	renderMain(doc){
+		document.querySelector('#main_text').innerHTML = doc.getHtml();
+		document.title = 'Wiki: ' + doc.getTitle();
 	}
 
-	renderSidebar(text, title){
-		document.querySelector('#sidebar_text').innerHTML = text;
+	renderSidebar(doc){
+		document.querySelector('#sidebar_text').innerHTML = doc.getHtml();
 	}
 
 	init() {
 		var that = this;
 
-		this.base_url = (function(){
-			var arr_path = document.location.pathname.split('/');
-			arr_path.pop();
-			return arr_path.join('/') + '/'
-		})();
-
-		this.loadAndRender((text, title) => { that.renderSidebar(text, title) }, this.getSidebarPath());
-		this.loadAndRender((text, title) => { that.renderMain(text, title) }, this.getMainPath());
+		this.loadAndRender((doc) => { that.renderSidebar(doc) }, this.getSidebarPath());
+		this.loadAndRender((doc) => { that.renderMain(doc) }, this.getMainPath());
 	}
 
 	update() {
 		var that = this;
-		this.loadAndRender((text, title) => { that.renderMain(text, title) }, this.getMainPath());
+		this.loadAndRender((doc) => { that.renderMain(doc) }, this.getMainPath());
 	}
 }
 
