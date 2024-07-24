@@ -2,7 +2,7 @@
 
 # About
 You are welcome to:
-- play with the [demo](https://markdownit.salalex.repl.co),
+- play with the [demo](https://markdownit.myhostname.xyz),
 - examine the code [in this REPL](https://repl.it/@salalex/markdownit),
 - checkout my [repository on GitHub](https://github.com/alex-salnikov/markdownit).
 
